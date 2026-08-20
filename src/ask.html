@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>MailZip 确认</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px 20px; color: #222; }
+    h1 { font-size: 1.1em; margin-top: 0; }
+    ul { padding-left: 20px; }
+    li { margin: 4px 0; font-size: 0.95em; }
+    .actions { margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
+    button { padding: 8px 14px; cursor: pointer; }
+    #cancel { background: transparent; border: 1px solid #bbb; }
+    #raw { background: transparent; border: 1px solid #bbb; }
+    #zip { background: #1a73e8; color: #fff; border: 1px solid #1a73e8; }
+  </style>
+</head>
+<body>
+  <h1>MailZip：以下附件符合压缩条件</h1>
+  <ul id="files"></ul>
+  <p class="hint">压缩后原附件将被替换为 &lt;文件名&gt;.zip。</p>
+  <div class="actions">
+    <button id="cancel">取消发送</button>
+    <button id="raw">不压缩，继续发送</button>
+    <button id="zip">压缩后发送</button>
+  </div>
+  <script src="ask.js"></script>
+</body>
+</html>

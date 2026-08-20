@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "MailZip",
+  "version": "0.1.0",
+  "description": "Automatically zip matching attachments before sending (e.g. CAD files).",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "mailzip@ximalu.dev",
+      "strict_min_version": "98.0"
+    }
+  },
+  "permissions": ["compose", "storage"],
+  "background": {
+    "scripts": ["dist/background.js"]
+  },
+  "options_ui": {
+    "page": "dist/options.html",
+    "open_in_tab": true
+  }
+}

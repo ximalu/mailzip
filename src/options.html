@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>MailZip 设置</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 24px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 1.3em; }
+    label { display: block; margin: 16px 0 4px; font-weight: 600; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 6px 8px; box-sizing: border-box; }
+    .hint { color: #666; font-size: 0.85em; margin-top: 4px; }
+    .row { margin: 8px 0; }
+    button { margin-top: 20px; padding: 8px 20px; }
+    #status { margin-top: 12px; min-height: 1.2em; }
+    .ok { color: #1a7f37; }
+    .err { color: #c62828; }
+  </style>
+</head>
+<body>
+  <h1>MailZip 设置</h1>
+  <p class="hint">发送邮件时，自动将符合条件（后缀匹配且超过大小阈值）的附件压缩为 ZIP 后再发送。</p>
+
+  <label for="extensions">压缩文件后缀</label>
+  <input type="text" id="extensions" placeholder="例如：stp, step, dwg, dxf" />
+  <div class="hint">多个后缀用逗号或空格分隔。自动处理大小写、前导点号（.stp）和多余空格。内部统一为小写、不带点。</div>
+
+  <label for="threshold">文件大小阈值（MB）</label>
+  <input type="number" id="threshold" min="0" step="0.1" placeholder="1" />
+  <div class="hint">1 MB = 1,048,576 字节（1 MiB）。附件大小严格大于该值才压缩（&gt;，不含等于）。</div>
+
+  <label>处理方式</label>
+  <div class="row">
+    <label style="display:inline; font-weight:400;"><input type="radio" name="mode" value="auto" /> 自动压缩</label>
+    <span class="hint">发现符合条件附件后直接压缩并继续发送。</span>
+  </div>
+  <div class="row">
+    <label style="display:inline; font-weight:400;"><input type="radio" name="mode" value="ask" /> 询问后压缩</label>
+    <span class="hint">发送前弹出确认，可选择：取消发送 / 不压缩继续发送 / 压缩后发送。</span>
+  </div>
+
+  <div id="preview" class="hint"></div>
+  <button id="save">保存</button>
+  <div id="status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
