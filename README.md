@@ -133,6 +133,11 @@ npm test
 
 ## 版本履历
 
+### 0.2.5（2026-08-21）
+
+- **真正修复 on-add 压缩无动作**：JSZip 的 `require("setimmediate")` 是副作用引入（安装全局 `setImmediate`），0.2.3/0.2.4 的 alias shim 只导出函数没装全局 → JSZip `delay()` 裸调用 `setImmediate` 抛 ReferenceError。shim 现在同时设置 `globalThis.setImmediate`
+- 新增沙箱回归测试 `scripts/test-sandbox.cjs`（`npm run test:sandbox`）：用 Node vm 模拟无 `global`/`process` 的 Thunderbird 环境，验证 bundle 内 zipFile 真实可运行（能抓到 0.2.3/0.2.4 这类单测测不出的运行时问题）
+
 ### 0.2.4（2026-08-21）
 
 - 修复 0.2.3 的运行时崩溃：JSZip 源码依赖（lie → immediate）裸引用 Node 全局 `global`/`process`，Thunderbird 环境不存在导致压缩无动作。esbuild `define` 替换为 `globalThis` 和 `{browser:true}`（lie 走浏览器分支）

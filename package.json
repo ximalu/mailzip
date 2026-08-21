@@ -1,6 +1,6 @@
 {
   "name": "mailzip",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Thunderbird extension: automatically zip matching attachments before sending",
   "license": "MIT",
   "private": true,
@@ -8,7 +8,8 @@
   "scripts": {
     "build": "node build.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:sandbox": "node scripts/test-sandbox.cjs"
   },
   "devDependencies": {
     "@types/thunderbird-webext-browser": "^127.0.0",
