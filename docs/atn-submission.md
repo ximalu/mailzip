@@ -58,9 +58,8 @@ No other permissions, no network access, no data collection.
 ## 已知 lint warnings（提交时如有提示）
 
 1. `MANIFEST_PERMISSIONS: Invalid permissions "compose"` — web-ext (Firefox linter) 不认识 Thunderbird 特有权限，误报。compose 是官方 Thunderbird 权限（webextension-api.thunderbird.net），ATN validator 认识。
-2. `DANGEROUS_EVAL` — esbuild 注入的 setImmediate polyfill（不可达代码路径），非业务代码，无实际风险。
 
-两者均为 warning（非 error），不阻塞提交。若人工审核问起，按上述说明回复。
+DANGEROUS_EVAL 已于 0.2.3 消除（setimmediate 包 alias 为无 eval shim），不应再出现。
 
 ## 提交流程
 

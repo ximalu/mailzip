@@ -133,6 +133,11 @@ npm test
 
 ## 版本履历
 
+### 0.2.3（2026-08-21）
+
+- 修复 AMO validator 的 DANGEROUS_EVAL 警告：JSZip 依赖的 npm `setimmediate` 包含 `new Function`，通过 esbuild `platform=neutral` + alias 替换为无 eval 的 setTimeout shim（`src/lib/setimmediate-shim.cjs`、`readable-stream-shim.cjs`）
+- web-ext lint：errors 0 / warnings 1（仅剩 compose 权限误报）
+
 ### 0.2.2（2026-08-21）
 
 - 新增应用图标（48/96/128，`scripts/gen-icons.py` 生成），manifest 补 `icons` 字段
