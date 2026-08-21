@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>MailZip 确认</title>
+  <title data-i18n="askTitle">MailZip: the following attachment(s) match the compression rules</title>
   <style>
     body { font-family: system-ui, sans-serif; padding: 16px 20px; color: #222; }
     h1 { font-size: 1.1em; margin-top: 0; }
     ul { padding-left: 20px; }
     li { margin: 4px 0; font-size: 0.95em; }
+    .hint { color: #666; font-size: 0.85em; }
     .actions { margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
     button { padding: 8px 14px; cursor: pointer; }
     #cancel { background: transparent; border: 1px solid #bbb; }
@@ -16,13 +17,13 @@
   </style>
 </head>
 <body>
-  <h1>MailZip：以下附件符合压缩条件</h1>
+  <h1 data-i18n="askTitle">MailZip: the following attachment(s) match the compression rules</h1>
   <ul id="files"></ul>
-  <p class="hint">压缩后原附件将被替换为 &lt;文件名&gt;.zip。</p>
+  <p class="hint" data-i18n="askHint">After compression the original attachment is replaced with &lt;filename&gt;.zip.</p>
   <div class="actions">
-    <button id="cancel">取消发送</button>
-    <button id="raw">不压缩，继续发送</button>
-    <button id="zip">压缩后发送</button>
+    <button id="cancel" data-i18n="btnCancelSend">Cancel sending</button>
+    <button id="raw" data-i18n="btnRawSend">Send without compressing</button>
+    <button id="zip" data-i18n="btnZipSend">Compress and send</button>
   </div>
   <script src="ask.js"></script>
 </body>

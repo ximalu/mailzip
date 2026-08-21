@@ -8,6 +8,8 @@
 export const BYTES_PER_MIB = 1_048_576;
 
 export type CompressMode = "auto" | "ask";
+export type CompressTiming = "on-send" | "on-add";
+export type Language = "en" | "zh";
 
 export interface MailZipConfig {
   /** Normalized extensions: lowercase, no leading dot. e.g. ["stp", "step"] */
@@ -15,10 +17,16 @@ export interface MailZipConfig {
   /** Size threshold in bytes. Attachments strictly larger than this qualify. */
   thresholdBytes: number;
   mode: CompressMode;
+  /** When to compress: before sending, or right after attachments are added. */
+  timing: CompressTiming;
+  /** UI language (default English; Chinese optional). */
+  language: Language;
 }
 
 export const DEFAULT_THRESHOLD_MIB = 1;
 export const DEFAULT_MODE: CompressMode = "auto";
+export const DEFAULT_TIMING: CompressTiming = "on-send";
+export const DEFAULT_LANGUAGE: Language = "en";
 
 /**
  * Parse a raw extensions string into normalized lowercase dot-less extensions.

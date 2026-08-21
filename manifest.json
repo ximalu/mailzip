@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "MailZip",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Automatically zip matching attachments before sending (e.g. CAD files).",
   "browser_specific_settings": {
     "gecko": {
@@ -11,10 +11,10 @@
   },
   "permissions": ["compose", "storage"],
   "background": {
-    "scripts": ["dist/background.js"]
+    "scripts": ["background.js"]
   },
   "options_ui": {
-    "page": "dist/options.html",
+    "page": "options.html",
     "open_in_tab": true
   }
 }

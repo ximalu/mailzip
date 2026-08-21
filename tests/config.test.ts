@@ -13,6 +13,8 @@ const cfg = (over: Partial<MailZipConfig> = {}): MailZipConfig => ({
   extensions: ["stp", "step", "dwg", "dxf"],
   thresholdBytes: 1 * BYTES_PER_MIB,
   mode: "auto",
+  timing: "on-send",
+  language: "en",
   ...over,
 });
 

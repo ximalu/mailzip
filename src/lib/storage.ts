@@ -3,8 +3,10 @@
  */
 import {
   BYTES_PER_MIB,
+  DEFAULT_LANGUAGE,
   DEFAULT_MODE,
   DEFAULT_THRESHOLD_MIB,
+  DEFAULT_TIMING,
   MailZipConfig,
 } from "./config.js";
 
@@ -15,6 +17,8 @@ export function defaultConfig(): MailZipConfig {
     extensions: [],
     thresholdBytes: DEFAULT_THRESHOLD_MIB * BYTES_PER_MIB,
     mode: DEFAULT_MODE,
+    timing: DEFAULT_TIMING,
+    language: DEFAULT_LANGUAGE,
   };
 }
 
@@ -33,6 +37,8 @@ export async function loadConfig(): Promise<MailZipConfig> {
         ? raw.thresholdBytes
         : defaultConfig().thresholdBytes,
     mode: raw.mode === "ask" ? "ask" : "auto",
+    timing: raw.timing === "on-add" ? "on-add" : "on-send",
+    language: raw.language === "zh" ? "zh" : "en",
   };
 }
 
