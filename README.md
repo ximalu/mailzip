@@ -135,6 +135,7 @@ npm test
 
 ### 0.2.5（2026-08-21）
 
+- ✅ **已上架 addons.thunderbird.net**（Listed Version: 0.2.5）
 - **真正修复 on-add 压缩无动作**：JSZip 的 `require("setimmediate")` 是副作用引入（安装全局 `setImmediate`），0.2.3/0.2.4 的 alias shim 只导出函数没装全局 → JSZip `delay()` 裸调用 `setImmediate` 抛 ReferenceError。shim 现在同时设置 `globalThis.setImmediate`
 - 新增沙箱回归测试 `scripts/test-sandbox.cjs`（`npm run test:sandbox`）：用 Node vm 模拟无 `global`/`process` 的 Thunderbird 环境，验证 bundle 内 zipFile 真实可运行（能抓到 0.2.3/0.2.4 这类单测测不出的运行时问题）
 
