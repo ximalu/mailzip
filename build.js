@@ -49,6 +49,15 @@ for (const [entry, outfile] of entries) {
     // which pulls in JSZip's pre-bundled dist file. neutral skips it.
     platform: "neutral",
     mainFields: ["module", "main"],
+    // JSZip's source deps (lie → immediate) reference Node globals that do
+    // not exist in Thunderbird: `global` (nextTick) and `process.browser`
+    // (lie feature detection). Rewrite both:
+    //   global  → globalThis (exists in extension pages)
+    //   process → { browser: true } (lie then takes its browser branch)
+    define: {
+      global: "globalThis",
+      process: '{"browser":true}',
+    },
     alias: {
       setimmediate: SET_IMMEDIATE_SHIM,
       "readable-stream": READABLE_STREAM_SHIM,

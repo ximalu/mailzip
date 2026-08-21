@@ -133,6 +133,11 @@ npm test
 
 ## 版本履历
 
+### 0.2.4（2026-08-21）
+
+- 修复 0.2.3 的运行时崩溃：JSZip 源码依赖（lie → immediate）裸引用 Node 全局 `global`/`process`，Thunderbird 环境不存在导致压缩无动作。esbuild `define` 替换为 `globalThis` 和 `{browser:true}`（lie 走浏览器分支）
+- 教训：`platform=neutral` 后必须处理 Node 全局引用；单测（Node 环境）无法捕获此问题，真机验证必要
+
 ### 0.2.3（2026-08-21）
 
 - 修复 AMO validator 的 DANGEROUS_EVAL 警告：JSZip 依赖的 npm `setimmediate` 包含 `new Function`，通过 esbuild `platform=neutral` + alias 替换为无 eval 的 setTimeout shim（`src/lib/setimmediate-shim.cjs`、`readable-stream-shim.cjs`）
