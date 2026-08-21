@@ -1,6 +1,6 @@
 {
   "name": "mailzip",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Thunderbird extension: automatically zip matching attachments before sending",
   "license": "MIT",
   "private": true,
