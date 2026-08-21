@@ -1,8 +1,13 @@
 {
   "manifest_version": 2,
   "name": "MailZip",
-  "version": "0.2.1",
-  "description": "Automatically zip matching attachments before sending (e.g. CAD files).",
+  "version": "0.2.2",
+  "description": "Automatically zip email attachments that match your rules (extension + size), before sending or right after you add them.",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "mailzip@ximalu.dev",

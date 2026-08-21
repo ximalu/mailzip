@@ -31,5 +31,6 @@ for (const [entry, outfile] of entries) {
 
 cpSync("src/options.html", "dist/options.html");
 cpSync("src/ask.html", "dist/ask.html");
+cpSync("src/icons", "dist/icons", { recursive: true });
 cpSync("manifest.json", "dist/manifest.json");
 console.log("static assets copied");

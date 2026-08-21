@@ -53,10 +53,12 @@ mailzip/
 ├── manifest.json          # MV2 manifest（gecko id + strict_min_version 98.0）
 ├── package.json           # npm 脚本：build / test / typecheck
 ├── build.js               # esbuild 打包：src/*.ts → dist/*.js + 静态资源复制
+├── scripts/gen-icons.py   # 生成应用图标（PIL，48/96/128）
 ├── src/
 │   ├── background.ts      # onBeforeSend + onAttachmentAdded 主流程（含防递归、串行队列）
-│   ├── options.html/ts    # 设置界面（后缀 / 阈值 / 模式 / 时机 / 语言）
+│   ├── options.html/ts    # 设置界面（语言 / 时机 / 模式 / 后缀阈值）
 │   ├── ask.html/ts        # 询问模式确认窗口（按时机渲染选项语义）
+│   ├── icons/             # 应用图标（48/96/128 PNG）
 │   └── lib/
 │       ├── config.ts      # 后缀解析 / 阈值解析 / 匹配规则（纯逻辑，可单测）
 │       ├── storage.ts     # 设置持久化（storage.local）
@@ -130,6 +132,12 @@ npm test
 - **压缩失败策略**：ZIP 生成失败时不做任何附件修改，按原附件继续，并在后台日志记录错误（不会静默丢附件）。
 
 ## 版本履历
+
+### 0.2.2（2026-08-21）
+
+- 新增应用图标（48/96/128，`scripts/gen-icons.py` 生成），manifest 补 `icons` 字段
+- manifest description 完善（面向 ATN 商店展示）
+- 准备 addons.thunderbird.net 上架（listed 公开路线）
 
 ### 0.2.1（2026-08-21）
 
