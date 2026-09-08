@@ -125,13 +125,24 @@ npm test
 ## 已知限制
 
 - **`onBeforeSend` 异步 listener 类型**：`@types/thunderbird-webext-browser` 尚未声明 async listener 支持，代码中通过类型断言处理（Thunderbird 官方文档明确支持异步 listener，见 `src/background.ts` 注释）。
-- **询问模式的确认窗口**：使用 `windows.create` 弹出小窗口。实测若 Thunderbird 对用户输入事件有超时限制，超大附件的压缩可能触发超时——如遇此情况请改用自动模式，或在 README 更新说明。
+- **询问模式的确认窗口**：使用 `windows.create` 弹出（TB 的 `focused` 参数不支持，创建后通过 `windows.update(focused+drawAttention)` 置前；位置放在当前聚焦窗口右侧避免盖住发送按钮）。**窗口被关闭（点 X）或创建失败时按安全默认处理**：发送前询问 → 取消发送；添加时询问 → 保留原附件。不会出现"没选择邮件照样发出"或永久悬挂。
 - **添加后模式逐个询问**：拖拽多个匹配文件 + 询问模式时，每个附件弹一次确认窗口（逐个串行）。不接受批量合并确认。
 - **不做压缩收益判断**：不检查压缩后是否更小，不按文件类型智能判断，严格执行配置规则。
 - **ZIP 仅第一版**：不实现 7z。
 - **压缩失败策略**：ZIP 生成失败时不做任何附件修改，按原附件继续，并在后台日志记录错误（不会静默丢附件）。
 
 ## 版本履历
+
+### 0.2.6（2026-09-08）
+
+- **修复询问窗口焦点/悬挂/误触发送**（用户报告：发送后弹窗不在最前，未选择邮件照样发出）
+  - 根因：TB `windows.create` 不支持 `focused`；弹窗可能落在主窗口后、甚至盖住发送按钮（用户再点"发送"实际点到弹窗的"不压缩发送"）
+  - `windows.create` 后用 `windows.update({focused: true, drawAttention: true})` 置前
+  - 用 `windows.getLastFocused()` 把弹窗定位到撰写窗口右侧，避免盖住发送按钮
+  - 监听 `windows.onRemoved`：弹窗被 X 关闭 → 按安全默认处理（on-send 取消发送 / on-add 保留原附件），杜绝 `askResolve` 永久悬挂
+  - `windows.create` 失败兜底：同样按安全默认处理，绝不静默放行未压缩邮件
+  - `askResolve` 单值 → `Map<windowId, entry>`，多撰写窗口并发互不干扰；ask 页按钮回传自身 windowId
+- 验证：typecheck ✓ / 34 单测 ✓ / 沙箱回归 ✓（构建产物确认无 `askResolve` 残留）
 
 ### 0.2.5（2026-08-21）
 

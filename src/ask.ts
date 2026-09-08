@@ -101,12 +101,27 @@ function init() {
   document.getElementById("zip")?.addEventListener("click", () => choose(choiceMap.zip));
 }
 
-function choose(choice: AskChoice) {
-  void messenger.runtime.sendMessage({
-    type: "mailzip-ask-choice",
-    choice,
-  });
-  window.close();
+async function choose(choice: AskChoice) {
+  try {
+    let windowId: number | undefined;
+    try {
+      const win = await messenger.windows.getCurrent();
+      windowId = win?.id;
+    } catch {
+      // background falls back to a single pending ask window
+    }
+    await messenger.runtime.sendMessage({
+      type: "mailzip-ask-choice",
+      choice,
+      windowId,
+    });
+  } catch (err) {
+    // Background unreachable: nothing to resolve, just close. The popup's
+    // onRemoved handler in background.ts will apply the safe default.
+    console.error("[MailZip] sendMessage failed:", err);
+  } finally {
+    window.close();
+  }
 }
 
 init();

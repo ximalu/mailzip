@@ -40,7 +40,28 @@ const ASK_CHOICES: readonly AskChoice[] = [
   "zip",
 ];
 
-let askResolve: ((choice: AskChoice) => void) | null = null;
+/**
+ * Pending ask windows, keyed by their window id.
+ *
+ * Multiple compose windows can send at the same time, each opening its own
+ * ask popup. A single module-level resolve slot would let the second window
+ * overwrite the first, so each popup window id maps to its own resolve
+ * callback (and the timing it was opened for, which decides the default
+ * choice when the popup is dismissed without a button press).
+ */
+type AskEntry = {
+  resolve: (choice: AskChoice) => void;
+  timing: MailZipConfig["timing"];
+};
+const askWindows = new Map<number, AskEntry>();
+
+/**
+ * Default choice when the ask popup is closed without pressing a button:
+ *  on-send → cancel sending (never send un-zipped by accident),
+ *  on-add  → keep the original attachment untouched. */
+function defaultAskChoice(timing: MailZipConfig["timing"]): AskChoice {
+  return timing === "on-add" ? "keep-raw" : "cancel";
+}
 
 messenger.runtime.onMessage.addListener((message: unknown) => {
   if (
@@ -48,17 +69,38 @@ messenger.runtime.onMessage.addListener((message: unknown) => {
     typeof message === "object" &&
     (message as { type?: string }).type === "mailzip-ask-choice"
   ) {
-    const choice = (message as { choice?: string }).choice;
-    if (
-      askResolve &&
-      choice &&
-      ASK_CHOICES.includes(choice as AskChoice)
-    ) {
-      askResolve(choice as AskChoice);
-      askResolve = null;
+    const { choice, windowId } = message as {
+      choice?: string;
+      windowId?: number;
+    };
+    let entry: AskEntry | undefined;
+    let entryId: number | undefined;
+    if (windowId != null) {
+      entry = askWindows.get(windowId);
+      entryId = windowId;
+    } else if (askWindows.size === 1) {
+      // ask.ts normally reports its window id; tolerate messages without one
+      // when exactly one ask window is pending.
+      entryId = askWindows.keys().next().value;
+      entry = entryId != null ? askWindows.get(entryId) : undefined;
+    }
+    if (entry && choice && ASK_CHOICES.includes(choice as AskChoice)) {
+      if (entryId != null) askWindows.delete(entryId);
+      entry.resolve(choice as AskChoice);
     }
   }
   return false;
+});
+
+/** Fallback: user closes the ask popup via the window X (no button pressed).
+ *  Resolve with the safe default so onBeforeSend / onAttachmentAdded never
+ *  hang forever. */
+messenger.windows.onRemoved.addListener((windowId: number) => {
+  const entry = askWindows.get(windowId);
+  if (entry) {
+    askWindows.delete(windowId);
+    entry.resolve(defaultAskChoice(entry.timing));
+  }
 });
 
 /**
@@ -82,18 +124,59 @@ function showAskWindow(
   language: MailZipConfig["language"],
 ): Promise<AskChoice> {
   return new Promise((resolve) => {
-    askResolve = resolve;
-    const params = new URLSearchParams({
-      files: JSON.stringify(candidates),
-      timing,
-      lang: language,
-    });
-    void messenger.windows.create({
-      url: `ask.html?${params.toString()}`,
-      type: "popup",
-      width: 480,
-      height: 380,
-    });
+    void (async () => {
+      const params = new URLSearchParams({
+        files: JSON.stringify(candidates),
+        timing,
+        lang: language,
+      });
+      const url = `ask.html?${params.toString()}`;
+      let win;
+      try {
+        // Thunderbird's windows.create ignores the focused flag; position the
+        // popup next to the currently focused (compose) window instead so it
+        // never covers the Send button, then raise it explicitly afterwards.
+        const focused = await messenger.windows.getLastFocused();
+        const createData: Parameters<
+          typeof messenger.windows.create
+        >[0] = {
+          url,
+          type: "popup",
+          width: 480,
+          height: 380,
+        };
+        if (focused && typeof focused.left === "number") {
+          createData.left = focused.left + (focused.width ?? 800) + 8;
+          createData.top = Math.max(0, focused.top ?? 0);
+        }
+        win = await messenger.windows.create(createData);
+      } catch (err) {
+        // Window could not be created at all (e.g. popups blocked): resolve
+        // with the safe default so the send is never silently unzipped and
+        // onBeforeSend never hangs.
+        console.error("[MailZip] ask window creation failed:", err);
+        resolve(defaultAskChoice(timing));
+        return;
+      }
+
+      const windowId = win?.id;
+      if (windowId === undefined) {
+        resolve(defaultAskChoice(timing));
+        return;
+      }
+      askWindows.set(windowId, { resolve, timing });
+
+      // windows.create has no focused support in Thunderbird (schema marks it
+      // unsupported); bring the popup to the front now that it exists.
+      try {
+        await messenger.windows.update(windowId, {
+          focused: true,
+          drawAttention: true,
+        });
+      } catch (err) {
+        console.warn("[MailZip] could not focus ask window:", err);
+      }
+    })();
   });
 }
 
