@@ -103,6 +103,25 @@ messenger.windows.onRemoved.addListener((windowId: number) => {
   }
 });
 
+/** Keep the ask popup above Thunderbird until the user has decided.
+ *
+ * Right after creation Thunderbird can steal focus back to the compose window
+ * (its own window-raise logic may run after ours), which leaves the popup
+ * buried. While an ask popup is pending the onBeforeSend/onAttachmentAdded
+ * listener is blocked anyway, so re-raising the popup never interrupts real
+ * work. windows.onFocusChanged only reports Thunderbird's own windows (focus
+ * moving to another application arrives as WINDOW_ID_NONE), so this never
+ * yanks focus away from other apps. With several popups pending we stay out
+ * of the way to avoid focus fights between them. */
+messenger.windows.onFocusChanged.addListener((focusedWindowId: number) => {
+  if (focusedWindowId === messenger.windows.WINDOW_ID_NONE) return;
+  if (askWindows.size !== 1) return;
+  const pendingId = askWindows.keys().next().value;
+  if (pendingId !== undefined && pendingId !== focusedWindowId) {
+    void raiseAskWindow(pendingId);
+  }
+});
+
 /**
  * Serialize async work (on-add events, ask windows). onAttachmentAdded fires
  * once per attached file; dragging several files at once would otherwise
@@ -116,6 +135,30 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
     () => undefined,
   );
   return p;
+}
+
+const ASK_WINDOW_WIDTH = 480;
+const ASK_WINDOW_HEIGHT = 380;
+
+/** Bring an ask popup to the front. windows.create ignores `focused` in
+ *  Thunderbird (schema marks it unsupported), so this has to be a
+ *  windows.update after the window exists. `attention` additionally flashes
+ *  the taskbar entry; only useful right after creation, repeat focus steals
+ *  must stay quiet. */
+async function raiseAskWindow(
+  windowId: number,
+  attention = false,
+): Promise<void> {
+  try {
+    await messenger.windows.update(
+      windowId,
+      attention
+        ? { focused: true, drawAttention: true }
+        : { focused: true },
+    );
+  } catch (err) {
+    console.warn("[MailZip] could not focus ask window:", err);
+  }
 }
 
 function showAskWindow(
@@ -133,21 +176,34 @@ function showAskWindow(
       const url = `ask.html?${params.toString()}`;
       let win;
       try {
-        // Thunderbird's windows.create ignores the focused flag; position the
-        // popup next to the currently focused (compose) window instead so it
-        // never covers the Send button, then raise it explicitly afterwards.
+        // Thunderbird's windows.create ignores the focused flag. Center the
+        // popup on the currently focused (compose) window so it reads as part
+        // of the compose flow; raiseAskWindow() brings it to the front once it
+        // exists (the onFocusChanged guard below keeps it there).
         const focused = await messenger.windows.getLastFocused();
         const createData: Parameters<
           typeof messenger.windows.create
         >[0] = {
           url,
           type: "popup",
-          width: 480,
-          height: 380,
+          width: ASK_WINDOW_WIDTH,
+          height: ASK_WINDOW_HEIGHT,
         };
-        if (focused && typeof focused.left === "number") {
-          createData.left = focused.left + (focused.width ?? 800) + 8;
-          createData.top = Math.max(0, focused.top ?? 0);
+        if (
+          focused &&
+          typeof focused.left === "number" &&
+          typeof focused.top === "number" &&
+          typeof focused.width === "number" &&
+          typeof focused.height === "number"
+        ) {
+          createData.left = Math.max(
+            0,
+            Math.round(focused.left + (focused.width - ASK_WINDOW_WIDTH) / 2),
+          );
+          createData.top = Math.max(
+            0,
+            Math.round(focused.top + (focused.height - ASK_WINDOW_HEIGHT) / 2),
+          );
         }
         win = await messenger.windows.create(createData);
       } catch (err) {
@@ -168,14 +224,7 @@ function showAskWindow(
 
       // windows.create has no focused support in Thunderbird (schema marks it
       // unsupported); bring the popup to the front now that it exists.
-      try {
-        await messenger.windows.update(windowId, {
-          focused: true,
-          drawAttention: true,
-        });
-      } catch (err) {
-        console.warn("[MailZip] could not focus ask window:", err);
-      }
+      await raiseAskWindow(windowId, true);
     })();
   });
 }

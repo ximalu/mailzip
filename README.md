@@ -125,13 +125,21 @@ npm test
 ## 已知限制
 
 - **`onBeforeSend` 异步 listener 类型**：`@types/thunderbird-webext-browser` 尚未声明 async listener 支持，代码中通过类型断言处理（Thunderbird 官方文档明确支持异步 listener，见 `src/background.ts` 注释）。
-- **询问模式的确认窗口**：使用 `windows.create` 弹出（TB 的 `focused` 参数不支持，创建后通过 `windows.update(focused+drawAttention)` 置前；位置放在当前聚焦窗口右侧避免盖住发送按钮）。**窗口被关闭（点 X）或创建失败时按安全默认处理**：发送前询问 → 取消发送；添加时询问 → 保留原附件。不会出现"没选择邮件照样发出"或永久悬挂。
+- **询问模式的确认窗口**：使用 `windows.create` 弹出（TB 的 `focused` 参数不支持，创建后通过 `windows.update(focused+drawAttention)` 置前；位置居中于当前聚焦窗口；弹窗置前 = 创建后 `windows.update(focused+drawAttention)` + `windows.onFocusChanged` 焦点守护（待决期间 TB 抢回焦点会自动重新拉前，焦点切到其他应用不会被打扰））。**窗口被关闭（点 X）或创建失败时按安全默认处理**：发送前询问 → 取消发送；添加时询问 → 保留原附件。不会出现"没选择邮件照样发出"或永久悬挂。
 - **添加后模式逐个询问**：拖拽多个匹配文件 + 询问模式时，每个附件弹一次确认窗口（逐个串行）。不接受批量合并确认。
 - **不做压缩收益判断**：不检查压缩后是否更小，不按文件类型智能判断，严格执行配置规则。
 - **ZIP 仅第一版**：不实现 7z。
 - **压缩失败策略**：ZIP 生成失败时不做任何附件修改，按原附件继续，并在后台日志记录错误（不会静默丢附件）。
 
 ## 版本履历
+
+### 0.2.7（2026-09-09）
+
+- **询问弹窗改为居中 + 持续置顶**（用户反馈：右侧定位实际落在右上角，观感差；希望弹窗在 TB 正中且始终在最前）
+  - 定位：`windows.getLastFocused()` 取撰写窗口坐标 → left/top = 主窗口中心偏移半个弹窗尺寸，双轴 clamp ≥ 0（多屏/小窗不越界）
+  - 持续置前：新增 `windows.onFocusChanged` 焦点守护——弹窗待决期间（`askWindows.size === 1`）若焦点回到 TB 其它窗口，自动 `windows.update({focused: true})` 拉回弹窗；焦点切到其它应用（WINDOW_ID_NONE）不抢，多弹窗并发不互相打架
+  - 置前逻辑抽成 `raiseAskWindow(windowId, attention?)`：创建后首次带 drawAttention，守护期只静默聚焦（不反复闪任务栏）
+- 验证：typecheck ✓ / 34 单测 ✓ / build ✓
 
 ### 0.2.6（2026-09-08）
 
